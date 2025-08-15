@@ -1,33 +1,6 @@
-class Character extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y, texture, cursors, keys) {
-        super(scene, x, y, texture);
-        scene.add.existing(this);
-        scene.physics.add.existing(this);
-        this.setCollideWorldBounds(true);
-        this.cursors = cursors;
-        this.keys = keys;
-    }
+import Character from '/Character.js';
 
-    handleMovement() {
-        this.setVelocity(0);
-        if (this.cursors.left.isDown || this.keys.A.isDown) {
-            this.setVelocityX(-160);
-            this.anims.play('left', true);
-        }
-        else if (this.cursors.right.isDown || this.keys.D.isDown) {
-            this.setVelocityX(160);
-            this.anims.play('right', true);
-        } else {
-            this.anims.play('turn');
-        }
-        if (this.cursors.up.isDown || this.keys.W.isDown) {
-            this.setVelocityY(-160);
-        }
-        else if (this.cursors.down.isDown || this.keys.S.isDown) {
-            this.setVelocityY(160);
-        }
-    }
-}
+let cursors, wasdKeys, player, characters = [];
 
 const config = {
     type: Phaser.AUTO,
@@ -58,8 +31,8 @@ function preload() {
 
 function create() {
     // Add player to the center
-    let cursors = this.input.keyboard.createCursorKeys();
-    let wasdKeys = this.input.keyboard.addKeys({
+    cursors = this.input.keyboard.createCursorKeys();
+    wasdKeys = this.input.keyboard.addKeys({
         W: Phaser.Input.Keyboard.KeyCodes.W,
         A: Phaser.Input.Keyboard.KeyCodes.A,
         S: Phaser.Input.Keyboard.KeyCodes.S,
@@ -87,7 +60,7 @@ function create() {
     });
 
     player = new Character(this, 400, 300, 'dude', cursors, wasdKeys);
-    enemy = new Character(this, 450, 300, 'dude', cursors, wasdKeys);
+   
 }
 
 function update() {

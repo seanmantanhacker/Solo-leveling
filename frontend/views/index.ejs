@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <title>Mini 2D Adventure</title>
     <style>
-        body { margin: 0; background: #000; }
-        canvas { display: block; margin: auto; }
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%; /* 🚫 no scrollbars */
+        background: #1b1b1b;
+    }
+    canvas {
+        display: block;     /* removes extra gap that can cause scrollbars */
+    }
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 </head>
 <body>
 

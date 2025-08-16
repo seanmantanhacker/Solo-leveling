@@ -14,12 +14,10 @@ app.set('views', path.join(__dirname,'/frontend/views'));
 app.use(express.static(path.join(__dirname, '/frontend/assets')));
 
 app.get('/', (req, res) => {
-   
     res.render('index', {
         data: "a",
         ses: "a"
     });
-
 })
 
 let players = {};
@@ -29,6 +27,7 @@ io.on('connection', socket => {
 
     // Initialize new player
     players[socket.id] = { x: 400, y: 300 };
+
     socket.emit('currentPlayers', players);
     socket.broadcast.emit('newPlayer', { id: socket.id, x: 400, y: 300 });
 

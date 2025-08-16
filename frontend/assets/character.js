@@ -1,12 +1,16 @@
 // Character.js
 export default class Character extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y, texture, cursors, keys) {
+    constructor(scene, x, y, texture, cursors, keys, tint=null) {
         super(scene, x, y, texture);
         scene.add.existing(this);
         scene.physics.add.existing(this);
         this.setCollideWorldBounds(true);
+
         this.cursors = cursors;
-        this.keys = keys;
+        this.keys = keys; // 👇 apply tint if provided
+        if (tint) {
+            this.setTint(tint);
+        }
     }
 
     handleMovement() {

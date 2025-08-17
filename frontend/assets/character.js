@@ -16,29 +16,38 @@ export default class Character extends Phaser.Physics.Arcade.Sprite {
 
     handleMovement() {
         this.setVelocity(0);
-        if (this.cursors.left.isDown || this.keys.A.isDown) {
-            this.setVelocityX(-160);
-            this.anims.play('left', true);
-        } else if (this.cursors.right.isDown || this.keys.D.isDown) {
-            this.setVelocityX(160);
-            this.anims.play('right', true);
-        } else {
-            this.anims.play('turn');
-        }
-        if (this.cursors.up.isDown || this.keys.W.isDown) {
-            this.setVelocityY(-160);
-        } else if (this.cursors.down.isDown || this.keys.S.isDown) {
-            this.setVelocityY(160);
-        }
         // --- Joystick ---
         if (isMobile) {
         // create joystick/buttons
             if (this.joyStick) {
                 const cursorKeys = this.joyStick.createCursorKeys();
-                if (cursorKeys.left.isDown)  this.setVelocityX(-160);
-                if (cursorKeys.right.isDown) this.setVelocityX(160);
+                if (cursorKeys.left.isDown) {
+                    this.setVelocityX(-160);
+                    this.anims.play('left', true);
+                }
+                else if (cursorKeys.right.isDown) {
+                    this.setVelocityX(160);
+                    this.anims.play('right', true);
+                } else {
+                    this.anims.play('turn');
+                }
                 if (cursorKeys.up.isDown)    this.setVelocityY(-160);
                 if (cursorKeys.down.isDown)  this.setVelocityY(160);
+            }
+        } else {
+            if (this.cursors.left.isDown || this.keys.A.isDown) {
+                this.setVelocityX(-160);
+                this.anims.play('left', true);
+            } else if (this.cursors.right.isDown || this.keys.D.isDown) {
+                this.setVelocityX(160);
+                this.anims.play('right', true);
+            } else {
+                this.anims.play('turn');
+            }
+            if (this.cursors.up.isDown || this.keys.W.isDown) {
+                this.setVelocityY(-160);
+            } else if (this.cursors.down.isDown || this.keys.S.isDown) {
+                this.setVelocityY(160);
             }
         }
         

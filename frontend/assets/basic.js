@@ -16,7 +16,7 @@ const config = {
     backgroundColor: '#6f7579', // sky blue // sky blue
     physics: {
         default: 'arcade',
-        arcade: { debug: true }
+        arcade: { debug: true}
     },
     scene: {
         preload: preload,
@@ -33,6 +33,10 @@ const config = {
         scene: [
             { key: 'rexVirtualJoystick', plugin: rexVirtualJoystickPlugin, mapping: 'joystick' }
         ]
+    },
+    fps: {
+        target: 45,   // 👈 cap at 30 FPS
+        forceSetTimeOut: true   // 👈 ensures stable timing across browsers
     }
 };
 
@@ -47,7 +51,11 @@ function preload() {
     });
 
     this.load.image('wall', 'https://labs.phaser.io/assets/sprites/block.png');
-    
+    this.load.image('buttondown', 'https://labs.phaser.io/assets/ui/flixel-button.png');
+    this.load.image('portal', 'https://labs.phaser.io/assets/sprites/purple_ball.png');
+    this.load.image('buttonup', 'a.png');
+ 
+
     
 }
 
@@ -78,20 +86,20 @@ function create() {
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
-        frameRate: 10,
+        frameRate: 8,
         repeat: -1
     });
 
     this.anims.create({
         key: 'turn',
         frames: [{ key: 'dude', frame: 4 }],
-        frameRate: 20
+        frameRate: 10
     });
 
     this.anims.create({
         key: 'right',
         frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
-        frameRate: 10,
+        frameRate: 8,
         repeat: -1
     });
 
@@ -103,8 +111,9 @@ function create() {
         collideWorldBounds: true  // this applies to all children added to the group
     });
     players.add(player);
-    socket = io();
 
+    
+    socket = io();
     socket.on('currentPlayers', players => {
         Object.keys(players).forEach(id => {
             if(id !== socket.id){
@@ -112,32 +121,49 @@ function create() {
             }
         });
     });
-
     socket.on('newPlayer', playerInfo => {    
         addOtherPlayer(this, playerInfo, playerInfo.id);
     });
-
     socket.on('playerMoved', playerInfo => {
-        if(otherPlayers[playerInfo.id]){
-            otherPlayers[playerInfo.id].x = playerInfo.x;
-            otherPlayers[playerInfo.id].y = playerInfo.y;
+        
+        const other = otherPlayers[playerInfo.id];
+        if (other) {
+            other.setPosition(playerInfo.x, playerInfo.y);
+
+            // Reset velocity so old movement doesn't linger
+            other.setVelocity(0);
+
+            if (playerInfo.vx !== 0 || playerInfo.vy !== 0) {
+                // Player is moving → play movement anim
+                if (playerInfo.anim) {
+                    other.anims.play(playerInfo.anim, true);
+                }
+            } else {
+                // Player stopped → idle animation
+                other.anims.play('turn');
+            }
         }
     });
-
     socket.on('playerDisconnected', id => {
         if(otherPlayers[id]){
             otherPlayers[id].destroy();
             delete otherPlayers[id];
         }
     });
-
 }
 
 function update() {
     player.handleMovement()
    
-    // In your Phaser update loop
-    socket.emit('playerMovement', { x: player.x, y: player.y });
+    const anim = player.anims.currentAnim ? player.anims.currentAnim.key : 'turn';
+    
+    socket.emit('playerMovement', {
+        x: player.x,
+        y: player.y,
+        vx: player.body.velocity.x,
+        vy: player.body.velocity.y,
+        anim: player.anims.currentAnim ? player.anims.currentAnim.key : 'turn'
+    });
 }
 
 // helper needs scene passed in
@@ -159,4 +185,60 @@ function load_obstacle(scene,player) {
         scene.physics.add.existing(wall, true);
         scene.physics.add.collider(player, wall);
     });
+    
+     // Create portal
+    const portal = scene.physics.add.sprite(600, 300, 'portal');
+    portal.setImmovable(true);
+    portal.setScale(1.5);
+    portal.body.setAllowGravity(false); // if gravity is enabled in your world
+
+    // Overlap check (not collision, so you can walk into it)
+    scene.physics.add.overlap(player, portal, () => {
+        console.log("Player entered portal!");
+        // Teleport player somewhere else
+        player.setPosition(1000, 800);
+    });
+
+     // === BUTTON ===
+    const button = scene.physics.add.sprite(500, 400, 'buttonup');
+    
+    button.body.setSize(45, 45); // width 100px, height 50px
+    button.body.setOffset(0, 0);  
+    button.setImmovable(true);
+    button.body.setAllowGravity(false);
+    button.isOn = false;
+    // Add overlap
+
+    scene.physics.add.overlap(player, button, () => {
+    if (!button.isPressed) {
+        if (button.isPressed){
+            button.clearTint()
+        } else {
+            button.setTint(0xff0000)   
+        }
+        button.isPressed = true;
+    }
+    });
+
+    // Reset each physics step
+    scene.physics.world.on('worldstep', () => {
+        const isOverlapping = scene.physics.overlap(player, button);
+        if (!isOverlapping && button.isPressed) {
+            if (button.isPressed){
+                button.setTint(0x00ef00)
+            } else {
+                button.clearTint()
+            }
+            button.isPressed = false;
+        }
+    });
+
+     // Optional: reset switch if player leaves
+    scene.physics.add.collider(player, button, null, (p, b) => {
+        // This prevents continuous triggering
+        return false;
+    });
+
+   
+
 }

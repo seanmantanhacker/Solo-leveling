@@ -26,7 +26,7 @@ io.on('connection', socket => {
     console.log('A player connected:', socket.id);
 
     // Initialize new player
-    players[socket.id] = { x: 400, y: 300 };
+    players[socket.id] = { x: 400, y: 300, vx: 0, vy : 0, anim: null };
 
     socket.emit('currentPlayers', players);
     socket.broadcast.emit('newPlayer', { id: socket.id, x: 400, y: 300 });
@@ -36,7 +36,19 @@ io.on('connection', socket => {
         if(players[socket.id]){
             players[socket.id].x = data.x;
             players[socket.id].y = data.y;
-            socket.broadcast.emit('playerMoved', { id: socket.id, x: data.x, y: data.y });
+            
+            players[socket.id].vx = data.vx;
+            players[socket.id].vy = data.vy;
+            players[socket.id].anim = data.anim;
+
+            socket.broadcast.emit('playerMoved', { 
+                id: socket.id, 
+                x: data.x, 
+                y: data.y,
+                vx : data.vx,
+                vy : data.vy,
+                anim: data.anim 
+            });
         }
     });
 

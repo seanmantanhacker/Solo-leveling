@@ -103,8 +103,8 @@ function create() {
         repeat: -1
     });
 
-    player = new Character(this, 400, 300, 'dude', cursors, wasdKeys, joyStick);
-    
+    player = new Character(this, 0, 0, 'dude', cursors, wasdKeys, joyStick);
+    player.setDepth(1);  // on top
     this.cameras.main.startFollow(player, true, 0.08, 0.08)
     load_obstacle(this,player)
     players = this.physics.add.group({
@@ -175,70 +175,93 @@ function addOtherPlayer(scene, info, id) {
 }
 
 function load_obstacle(scene,player) {
-    const walls = [
-        { x: 0, y: 15, width: 400, height: 15 },
-        { x: 300, y: 78, width: 400, height: 15 }
-    ];
+    const walls = scene.physics.add.staticGroup();
 
-    walls.forEach(w => {
-        let wall = scene.add.rectangle(w.x, w.y, w.width, w.height, 0x6666ff);
-        scene.physics.add.existing(wall, true);
-        scene.physics.add.collider(player, wall);
+    let wall_creation = scene.add.rectangle(200, 60, 400, 20, 0x6666ff);
+    walls.add(wall_creation);
+    let wall_creation3 = scene.add.rectangle(200, 500, 100, 100, 0x6666ff);
+    walls.add(wall_creation3);
+
+     // Enable physics body for rectangles
+    walls.getChildren().forEach(wall => {
+        scene.physics.add.existing(wall, true); // true = static
     });
+
+    // Add collision between player and walls
+    scene.physics.add.collider(player, walls);
+
+    let wall_creation_no1 = scene.add.rectangle(410, 35, 20, 70, 0x6666ff);
+    scene.physics.add.existing(wall_creation_no1, true); // true = static
+    scene.physics.add.collider(player, wall_creation_no1);
     
-     // Create portal
-    const portal = scene.physics.add.sprite(600, 300, 'portal');
-    portal.setImmovable(true);
-    portal.setScale(1.5);
-    portal.body.setAllowGravity(false); // if gravity is enabled in your world
+    // // Create portal
+    // const portal = scene.physics.add.sprite(600, 300, 'portal');
+    // portal.setImmovable(true);
+    // portal.setScale(1.5);
+    // portal.body.setAllowGravity(false); // if gravity is enabled in your world
 
-    // Overlap check (not collision, so you can walk into it)
-    scene.physics.add.overlap(player, portal, () => {
-        console.log("Player entered portal!");
-        // Teleport player somewhere else
-        player.setPosition(1000, 800);
-    });
+    // // Overlap check (not collision, so you can walk into it)
+    // scene.physics.add.overlap(player, portal, () => {
+    //     console.log("Player entered portal!");
+    //     // Teleport player somewhere else
+    //     player.setPosition(1000, 800);
+    // });
 
      // === BUTTON ===
-    const button = scene.physics.add.sprite(500, 400, 'buttonup');
+    const button1 = scene.physics.add.sprite(300, 25, 'buttonup');
     
-    button.body.setSize(45, 45); // width 100px, height 50px
-    button.body.setOffset(0, 0);  
-    button.setImmovable(true);
-    button.body.setAllowGravity(false);
-    button.isOn = false;
+    button1.body.setSize(45, 45); // width 100px, height 50px
+    button1.body.setOffset(0, 0);  
+    button1.setImmovable(true);
+    button1.body.setAllowGravity(false);
+    button1.isOn = false;
     // Add overlap
-
-    scene.physics.add.overlap(player, button, () => {
-    if (!button.isPressed) {
-        if (button.isPressed){
-            button.clearTint()
+    scene.physics.add.overlap(player, button1, () => {
+    if (!button1.isPressed) {
+        if (button1.isPressed){
+            button1.clearTint()
         } else {
-            button.setTint(0xff0000)   
+            button1.setTint(0xff0000)   
         }
-        button.isPressed = true;
+        console.log("Pressed")
+        toggleWall(wall_creation_no1,false)
+
+        button1.isPressed = true;
     }
     });
 
     // Reset each physics step
     scene.physics.world.on('worldstep', () => {
-        const isOverlapping = scene.physics.overlap(player, button);
-        if (!isOverlapping && button.isPressed) {
-            if (button.isPressed){
-                button.setTint(0x00ef00)
+        const isOverlapping = scene.physics.overlap(player, button1);
+        if (!isOverlapping && button1.isPressed) {
+            if (button1.isPressed){
+                button1.setTint(0x00ef00)
             } else {
-                button.clearTint()
+                button1.clearTint()
             }
-            button.isPressed = false;
+            console.log("UN Pressed")
+            
+            button1.isPressed = false;
         }
     });
 
-     // Optional: reset switch if player leaves
-    scene.physics.add.collider(player, button, null, (p, b) => {
-        // This prevents continuous triggering
-        return false;
-    });
+    //  // Optional: reset switch if player leaves
+    // scene.physics.add.collider(player, button, null, (p, b) => {
+    //     // This prevents continuous triggering
+    //     return false;
+    // });
 
    
 
+}
+
+// === Toggle function ===
+function toggleWall(wall,enabled) {
+    if (wall.body.enable == true){
+        wall.body.enable = false
+        wall.setVisible(false);
+    }else {
+        wall.body.enable = true
+        wall.setVisible(true);
+    }
 }
